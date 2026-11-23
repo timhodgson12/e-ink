@@ -1,0 +1,12 @@
+[Unit]
+Description=E-ink goals display
+After=network-online.target
+
+[Service]
+WorkingDirectory=/home/pi/e-ink
+ExecStart=/home/pi/e-ink/.venv/bin/python -m eink.main
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

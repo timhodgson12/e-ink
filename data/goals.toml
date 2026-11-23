@@ -1,0 +1,32 @@
+# Copy to data/goals.toml. The display re-reads this file every minute.
+day_start = "08:00"
+day_end = "18:00"
+
+# Up to three habits. Add a date to `done` to fill that day's dot.
+[[habits]]
+name = "Deep work 3h"
+done = ["2026-11-23"]
+
+[[habits]]
+name = "Move"
+done = []
+
+[[habits]]
+name = "Lights out 23:00"
+done = ["2026-11-23"]
+
+# One table per day. The first three goals are shown.
+[days.2026-11-23]
+goals = [
+  { text = "Ship enclosure v1 to the printer", done = true },
+  { text = "Write Q1 plan first draft" },
+  { text = "30 min walk before dinner" },
+]
+blocks = [
+  { start = "08:30", end = "09:30", title = "Plan + inbox" },
+  { start = "10:00", end = "11:30", title = "Deep work: Q1 plan", focus = true },
+  { start = "11:30", end = "12:00", title = "Standup" },
+  { start = "13:00", end = "15:00", title = "Deep work: firmware", focus = true },
+  { start = "15:30", end = "16:30", title = "Reviews + email" },
+  { start = "17:00", end = "17:30", title = "Shutdown ritual" },
+]

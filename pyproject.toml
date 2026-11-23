@@ -1,0 +1,12 @@
+[project]
+name = "eink"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["pillow"]
+
+[project.optional-dependencies]
+pi = ["waveshare-epd", "spidev", "gpiozero"]
+dev = ["pytest", "cadquery"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
