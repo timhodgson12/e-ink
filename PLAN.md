@@ -24,6 +24,9 @@ Status legend: [ ] todo · [x] done · [?] needs Tim
       These are the `VERIFY`/`assumed` constants at the top of `cad/stand.py`.
 
 ## 2. Prerequisites — access for Claude
+- [?] **Interim: Pi 5 as the bridge** until the Zero 2 W's SD reader arrives (Wed 2026-11-25 evening).
+      Same 40-pin header, so the driver HAT fits. Pi 5 needs the gpiozero/lgpio-based Waveshare driver
+      (RPi.GPIO does not work on a Pi 5). Does not fit the printed foot — bench use only.
 - [?] Pi flashed with Raspberry Pi OS Lite 64-bit, Wi-Fi + SSH key set in Imager,
       hostname (suggest `eink.local`), SPI enabled (`raspi-config`)
 - [?] Passwordless `ssh eink.local` from this machine
