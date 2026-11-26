@@ -10,18 +10,37 @@ Status legend: [ ] todo · [x] done · [?] needs Tim
 - [x] Stand proposal — `design/stand_proposal.png`, STLs in `design/stl/`, `design/stand.step` (`cad/stand.py`)
 - [x] Tim approved UI and stand direction (2026-11-23)
 
-## 1. Prerequisites — hardware (Tim)
-- [?] **Driver board.** The listing is the *raw panel without PCB*: it has only a 24-pin
-      0.5 mm FPC tail and cannot plug into a Pi. Needs a **Waveshare e-Paper Driver HAT**
-      (Rev 2.3, includes FFC extension + adapter). Nothing works without it.
-- [?] Pi Zero 2 **WH** (pre-soldered header), or solder a 2×20 header onto the 2 W
-- [?] microSD ≥ 8 GB, 5 V ≥ 2 A micro-USB supply, ideally a right-angle micro-USB cable
-- [?] 4× M2.5×6 self-tapping screws (Pi), 6× M2×6 self-tapping pan head (2 plate, 4 foot), 1 mm foam tape
-- [?] Confirm panel variant printed on the FPC/back label: plain B/W **V2** vs **(B)** red
-      tri-colour vs **(G)**/HD — decides the driver (`epd7in5_V2` assumed) and refresh time
-- [?] Calipers on arrival: panel thickness, bottom border (assumed 8.9 mm), FPC tail
-      position/width/length, and where the FPC connector sits on the HAT.
-      These are the `VERIFY`/`assumed` constants at the top of `cad/stand.py`.
+## 1. Hardware
+
+### BOM
+| Item | Qty | Status |
+|---|---|---|
+| Waveshare 7.5" raw e-ink panel, 800×480 | 1 | have |
+| Waveshare Universal e-Paper Raw Panel Driver HAT (with FFC extension + adapter), wired to the Pi by its 9-wire jumper cable | 1 | have, wired |
+| Raspberry Pi Zero 2 W with 2×20 header | 1 | have |
+| PiSugar S, 1200 mAh UPS board (pogo pins under the Pi, charges over USB-C) | 1 | have |
+| microSD ≥ 8 GB | 1 | have |
+| USB-C cable + 5 V 2 A supply (charges the PiSugar, which powers the Pi) | 1 | ? |
+| M2×6 self-tapping pan-head screws (2 plate, 4 foot) | 6 | ? |
+| Double-sided foam tape, 1 mm (battery → plate, HAT → plate, behind panel) | 1 | ? |
+| Printed: frame, back plate, foot | 1 each | designed, not printed |
+
+The PiSugar's own four screws take the Pi's mounting holes, so the enclosure holds the stack
+in a cradle instead of on standoffs (no M2.5 screws needed). The HAT is not stacked on the header:
+it sits in its own cradle beside the Pi.
+
+### Measured (Tim, calipers, 2026-11-26)
+- Panel thickness 1.12 mm
+- PiSugar + Pi + upright jumper housings: 36.1 mm (battery face → jumper tops)
+- Pi length 65.48 mm, driver HAT length 65.69 mm, FFC adapter board 30.44 mm long
+- PiSugar USB-C sits on the same long edge as the Pi's ports (seen in the stack photo)
+
+### Still to verify
+- [?] Panel variant on the label: plain B/W **V2** vs **(B)** tri-colour vs **(G)**/HD — decides the driver
+- [?] Panel bottom border (assumed 8.9 mm), FPC tail position/width
+- [?] Estimates inside the 36.1 mm stack: Pi PCB 16.5 mm above the battery face (sets the microSD
+      window and port notch, both oversized to cover it); HAT thickness 13 mm
+- [?] PiSugar power switch location
 
 ## 2. Prerequisites — access for Claude
 - [?] **Interim: Pi 5 as the bridge** until the Zero 2 W's SD reader arrives (Wed 2026-11-25 evening).

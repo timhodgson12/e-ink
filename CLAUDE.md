@@ -1,6 +1,6 @@
 # E-ink goals display
 
-Waveshare 7.5" raw e-ink panel (800×480, 1-bit) + Pi Zero 2 W in a printed stand.
+Waveshare 7.5" raw e-ink panel (800×480, 1-bit) + Pi Zero 2 W + PiSugar S battery in a printed stand.
 `PLAN.md` is the live checklist: read it first, tick items as they land.
 
 - `eink/` — Python package that runs on the Pi. `render.py` draws the exact panel image,

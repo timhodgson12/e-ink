@@ -2,8 +2,8 @@
 
 Three supportless printed parts:
   frame      - front bezel; panel drops into a pocket from behind
-  back_plate - closes the frame, carries the Pi on standoffs
-  foot       - hollow wedge over the Pi; its underside is the desk contact
+  back_plate - closes the frame; two cradles locate the PiSugar + Pi stack and the driver HAT
+  foot       - box over both bays; its underside is the desk contact. Printed rear wall down.
 
 Build coords: X = width, Y = depth (0 = front face, + = back), Z = up the panel.
 Run: .venv/bin/python cad/stand.py  ->  design/stl/*.stl, design/stand.step
@@ -13,8 +13,8 @@ from pathlib import Path
 
 import cadquery as cq
 
-# ── Panel (Waveshare drawing; VERIFY with calipers on arrival) ────────────
-PANEL_W, PANEL_H, PANEL_T = 170.2, 111.2, 1.2
+# ── Panel (Waveshare drawing; thickness measured 1.12 on 2026-11-26) ──────
+PANEL_W, PANEL_H, PANEL_T = 170.2, 111.2, 1.12
 ACTIVE_W, ACTIVE_H = 163.2, 97.92
 BORDER_BOTTOM = 8.9          # panel edge -> active area, FPC side (assumed)
 FPC_W, FPC_X = 34.0, 8.0     # tail slot width / offset from centre (assumed)
@@ -29,16 +29,33 @@ LEDGE = 1.2                  # plate rests on this step around the pocket
 WALL, CHIN = 2.5, 7.5        # frame walls; bottom wall is thicker
 WIN_MARGIN = 0.5             # window opening beyond the active area
 
-FOOT_W, FOOT_WALL, FOOT_D = 90.0, 2.4, 58.0   # FOOT_D = depth of rear contact
-FOOT_TOP = 72.0                                # where the wedge meets the plate
-PI_W, PI_H, PI_HOLES = 65.0, 30.0, (58.0, 23.0)
-PI_Z0, STANDOFF = 14.0, 3.0
+FOOT_WALL = 2.4
+FOOT_TOP = 50.0                                # flat top, just above the port edge
+PI_W, PI_H, PI_Z0 = 65.5, 30.0, 16.0           # board footprint (65.48 measured); port edge faces up
+
+# Electronics behind the plate, side by side (measured 2026-11-26 unless marked est.):
+#   Pi bay  (-x): PiSugar S battery taped to the plate -> PiSugar PCB -> Pi (with heatsink)
+#                 -> 9 Dupont jumpers standing on the header. 36.1 mm battery face to jumper tops.
+#   HAT bay (+x): driver HAT flat against the plate, wired to the Pi by the 9-wire cable.
+#                 The FFC adapter (30.4 mm long) and folded FFC live in the space behind it.
+# The PiSugar's screws use the Pi's four mounting holes, so both boards sit in cradles
+# on the plate and are held by double-sided foam tape, not standoffs.
+STACK_GAP = 1.0              # plate -> battery (foam tape)
+STACK_H = 36.1               # battery face -> top of the jumper housings
+WIRE_BEND = 6.0              # room behind the housings for the wires to turn
+PISUGAR_T = 7.5              # battery + PiSugar PCB (est.)
+PI_RISE = 16.5               # battery face -> underside of the Pi PCB (est. from the photo)
+PCB_T = 1.6
+PORT_ZONE = 25.0             # battery face -> past the Pi's USB shells; top notch spans this
+HAT_W, HAT_H, HAT_T = 65.7, 30.5, 13.0   # 65.69 measured; thickness incl. 2x20 socket est.
+CRADLE_H = 8.0
+SIDE_GAP, MID_GAP = 7.1, 4.0 # board -> foot side wall (clears the screw bosses); Pi -> HAT
 
 # Fasteners: plate hooks into the frame's top wall on two tabs and is held by two
 # M2 screws through ears into the chin; the foot takes four M2 screws through the plate.
 EAR_X, EAR_W, EAR_SCREW_Z = 60.0, 10.0, 5.0
 TAB_X, TAB_W, TAB_T, TAB_L = 50.0, 12.0, 1.0, 1.1
-BOSS_X, BOSS_ZS, BOSS_LEN = FOOT_W / 2 - FOOT_WALL - 3.0, (13.0, 51.0), 8.0
+BOSS_ZS, BOSS_LEN = (12.5, 44.0), 8.0
 PILOT_R, CLEAR_R, HEAD_R, HEAD_H = 0.8, 1.2, 2.2, 1.2   # M2 self-tapping pan head
 
 tan_t = math.tan(math.radians(TILT))
@@ -52,6 +69,14 @@ cav_z0 = CHIN
 pocket_z0 = cav_z0 + LEDGE
 panel_z0 = pocket_z0 + FIT
 active_z0 = panel_z0 + BORDER_BOTTOM
+Y_PS = DEPTH + STACK_GAP
+Y_PI = Y_PS + PI_RISE
+STACK_TOP = Y_PS + STACK_H
+FOOT_D = round(STACK_TOP + WIRE_BEND + FOOT_WALL, 1)   # depth of rear wall / rear desk contact
+FOOT_W = round(2 * FOOT_WALL + 2 * SIDE_GAP + PI_W + MID_GAP + HAT_W + 0.6)
+BOSS_X = FOOT_W / 2 - FOOT_WALL - 3.0
+PI_X = -FOOT_W / 2 + FOOT_WALL + SIDE_GAP + PI_W / 2
+HAT_X = PI_X + PI_W / 2 + MID_GAP + HAT_W / 2
 
 
 def box(xc, w, y0, y1, z0, z1):
@@ -98,16 +123,15 @@ def make_plate():
         for bz in BOSS_ZS:  # foot screws go in from the panel side, heads counterbored
             p = p.cut(cyl(sx * BOSS_X, bz, D_PLATE0 - 1, DEPTH + 1, CLEAR_R))
             p = p.cut(cyl(sx * BOSS_X, bz, D_PLATE0 - 1, D_PLATE0 + HEAD_H, HEAD_R))
-    hx, hz = PI_HOLES[0] / 2, PI_HOLES[1] / 2
-    zc = PI_Z0 + PI_H / 2
-    for sx in (-1, 1):
-        for sz in (-1, 1):
-            post = cq.Workplane("XZ").circle(2.9).circle(1.1).extrude(-STANDOFF)  # M2.5 self-tap
-            p = p.union(post.translate((sx * hx, DEPTH, zc + sz * hz)))
+    # cradles: a shelf under each board takes its weight, stubs stop it sliding sideways
+    for xc, w in ((PI_X, PI_W), (HAT_X, HAT_W)):
+        p = p.union(box(xc, 60, DEPTH, DEPTH + CRADLE_H, PI_Z0 - 2.4, PI_Z0 - 0.3))
+        for sx in (-1, 1):
+            p = p.union(box(xc + sx * (w / 2 + 1.4), 2.0, DEPTH, DEPTH + CRADLE_H, PI_Z0 + 8, PI_Z0 + 20))
     return p
 
 
-FOOT_PROFILE = [(DEPTH, 6.5), (6.5 / tan_t, 6.5), (FOOT_D, FOOT_D * tan_t), (DEPTH, FOOT_TOP)]
+FOOT_PROFILE = [(DEPTH, 6.5), (6.5 / tan_t, 6.5), (FOOT_D, FOOT_D * tan_t), (FOOT_D, FOOT_TOP), (DEPTH, FOOT_TOP)]
 
 
 def make_foot():
@@ -116,15 +140,18 @@ def make_foot():
     inner = (cq.Workplane("YZ").polyline(FOOT_PROFILE).close().offset2D(-FOOT_WALL)
              .extrude(inner_w).translate((-inner_w / 2, 0, 0)))
     foot = outer.cut(inner).cut(inner.translate((0, -FOOT_WALL - 0.5, 0)))  # open to the plate
-    pcb_y = DEPTH + STANDOFF
-    # USB power / data plugs exit through the sloped rear face
-    foot = foot.cut(box(15.0, 26.0, pcb_y - 1, pcb_y + 9, PI_Z0 + PI_H, FOOT_TOP + 10))
-    # microSD access on the side wall
-    foot = foot.cut(box(-FOOT_W / 2, 10, pcb_y - 1.5, pcb_y + 3.5, PI_Z0 + 8, PI_Z0 + 22))
     for sx in (-1, 1):
-        for bz in BOSS_ZS:
-            boss = box(sx * BOSS_X, 6.0, DEPTH, DEPTH + BOSS_LEN, bz - 3, bz + 3)
-            foot = foot.union(boss.cut(cyl(sx * BOSS_X, bz, DEPTH - 1, DEPTH + BOSS_LEN - 1, PILOT_R)))
+        for bz in BOSS_ZS:  # full-depth columns so they print from the rear wall with no overhang
+            boss = box(sx * BOSS_X, 6.0, DEPTH, FOOT_D - 1, bz - 3, bz + 3).intersect(outer)
+            foot = foot.union(boss).cut(cyl(sx * BOSS_X, bz, DEPTH - 1, DEPTH + BOSS_LEN, PILOT_R))
+    # Port edge of the PiSugar and the Pi faces up: one notch in the top wall, open to the
+    # plate side, spans the whole board width so any USB / switch position on that edge is reachable.
+    foot = foot.cut(box(PI_X, PI_W + 1.0, DEPTH - 1, Y_PS + PORT_ZONE, PI_Z0 + PI_H - 0.01, FOOT_TOP + 1))
+    # microSD window in the side wall (card is on the Pi's short edge; Pi height is an estimate, so it is tall)
+    foot = foot.cut(box(-FOOT_W / 2, 10, Y_PI - 4.0, Y_PI + 7.0, PI_Z0 + 6, PI_Z0 + 24))
+    # the foot covers the plate's ear screws: floor notches leave room for their heads and a driver
+    for sx in (-1, 1):
+        foot = foot.cut(box(sx * EAR_X, EAR_W + 2.0, DEPTH - 1, 26.0, 0, 6.5 + FOOT_WALL + 0.1))
     return foot
 
 
@@ -138,11 +165,12 @@ def coupon(shape):
 def make_dummies():
     """Non-printed reference bodies for fit checks and renders."""
     panel = box(0, PANEL_W, LIP_T, LIP_T + PANEL_T, panel_z0, panel_z0 + PANEL_H)
-    y = DEPTH + STANDOFF
-    pi = box(0, PI_W, y, y + 1.6, PI_Z0, PI_Z0 + PI_H)
-    hat = box(0, PI_W, y + 13.1, y + 14.7, PI_Z0, PI_Z0 + PI_H)
-    hdr = box(0, 51, y + 1.6, y + 13.1, PI_Z0 + PI_H - 6, PI_Z0 + PI_H - 1)
-    return panel, pi.union(hat).union(hdr)
+    pisugar = box(PI_X, PI_W, Y_PS, Y_PS + PISUGAR_T, PI_Z0, PI_Z0 + PI_H)
+    pi = box(PI_X, PI_W, Y_PI, Y_PI + PCB_T, PI_Z0, PI_Z0 + PI_H)
+    sink = box(PI_X, 40, Y_PI + PCB_T, Y_PI + PCB_T + 6, PI_Z0 + 8, PI_Z0 + PI_H - 2)
+    jumpers = box(PI_X, 51, Y_PI + PCB_T, STACK_TOP, PI_Z0 + 1, PI_Z0 + 6)
+    hat = box(HAT_X, HAT_W, DEPTH + 0.5, DEPTH + 0.5 + HAT_T, PI_Z0, PI_Z0 + HAT_H)
+    return panel, pisugar.union(pi).union(sink).union(jumpers).union(hat)
 
 
 if __name__ == "__main__":
@@ -162,9 +190,11 @@ if __name__ == "__main__":
     for name, shape in [("frame", frame), ("back_plate", plate), ("foot", foot),
                         ("ref_panel", panel), ("ref_electronics", elec)]:
         cq.exporters.export(stand(shape), str(out / "stl" / f"assembled_{name}.stl"), tolerance=0.02)
-    # print orientation: front/open face down on the bed
-    bed = lambda s, y0: s.translate((0, -y0, 0)).rotate((0, 0, 0), (1, 0, 0), 90).translate((0, 0, 0))
-    for name, shape, y0 in [("frame", frame, 0), ("back_plate", plate, D_PLATE0), ("foot", foot, DEPTH),
+    # print orientation: frame and plate front face down; foot rear wall down (open side up)
+    bed = lambda s, y0: s.translate((0, -y0, 0)).rotate((0, 0, 0), (1, 0, 0), 90)
+    cq.exporters.export(foot.rotate((0, 0, 0), (1, 0, 0), -90).translate((0, 0, FOOT_D)),
+                        str(out / "stl" / "print_foot.stl"), tolerance=0.02)
+    for name, shape, y0 in [("frame", frame, 0), ("back_plate", plate, D_PLATE0),
                             ("coupon_frame", coupon(frame), 0), ("coupon_plate", coupon(plate), D_PLATE0)]:
         cq.exporters.export(bed(shape, y0), str(out / "stl" / f"print_{name}.stl"), tolerance=0.02)
     assy = cq.Assembly()
@@ -177,4 +207,6 @@ if __name__ == "__main__":
           f"on desk: {bb.xlen:.0f} W x {bb.ylen:.0f} D x {bb.zlen:.0f} H mm, min z {bb.zmin:.2f}")
     print(f"bezel: sides {(OUT_W - ACTIVE_W) / 2 - WIN_MARGIN:.1f}, top "
           f"{OUT_H - active_z0 - ACTIVE_H - WIN_MARGIN:.1f}, chin {active_z0 - WIN_MARGIN:.1f} mm")
+    print(f"foot {FOOT_W:.0f} W x {FOOT_D:.1f} deep; jumper tops at depth {STACK_TOP:.1f}, inner rear wall at "
+          f"{FOOT_D - FOOT_WALL:.1f} -> {FOOT_D - FOOT_WALL - STACK_TOP:.1f} mm for the wires to turn")
     print(f"active window corners (x, depth, up): ±{ACTIVE_W / 2}, {LIP_T}, {active_z0:.2f}..{active_z0 + ACTIVE_H:.2f}")
