@@ -54,14 +54,21 @@ D and E need hardware on the desk.
 - [x] State loaded from a TOML file (`data/goals.example.toml` → copy to `data/goals.toml`); default until §3 is decided
 - [x] Edge cases: no current block, >3 goals, long titles, blocks outside the window, empty day, unreadable file
 - [x] Snapshot tests (`tests/`, goldens in `tests/golden/`)
-- [ ] Overlapping blocks are drawn on top of each other (not laid out side by side)
+- [x] Overlapping blocks are drawn on top of each other (not laid out side by side)
+- [x] Approved design ported (2026-11-26, direction A + weather dock): day screen, morning / between /
+      evening / empty / all-done states, weather dock under the timeline — `eink/render.py`
+- [x] Weather: Pi-side cached Open-Meteo fetch (no key, hourly), degrades to no dock — `eink/weather.py`;
+      goldens + state-selection tests regenerated
 
 ### C. Enclosure (`cad/`)
 - [ ] Update constants from caliper measurements
 - [x] Retention: plate hooks into the top wall on two tabs + 2× M2 into the chin; foot takes 4× M2 through the plate
 - [x] Fit-test coupon — `design/stl/print_coupon_frame.stl`, `print_coupon_plate.stl`
 - [ ] Print coupon, adjust clearances, then slice + print frame, plate, foot
-- [ ] microSD is ~10 mm inside the foot wall: needs tweezers or foot removal — narrow the foot if that annoys
+- [x] Foot reworked from caliper measurements (2026-11-26): 155 wide × 53 deep, Pi stack and HAT side by side in cradles,
+      port notch on top, microSD window, floor notches for the plate's ear screws
+- [ ] microSD sits ~7 mm inside the foot's side window: tweezers
+- [ ] FFC extension + adapter stow in the ~30 mm of free depth behind the HAT — check on assembly
 
 ### D. Integration (hardware needed)
 - [ ] systemd service + timer on the Pi; boot-to-display < 60 s
