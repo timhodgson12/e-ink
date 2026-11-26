@@ -6,6 +6,7 @@ from datetime import datetime
 from .display import EpdDisplay, PngDisplay
 from .render import render, render_error
 from .state import load
+from .weather import current as weather
 
 
 def main() -> None:
@@ -21,7 +22,8 @@ def main() -> None:
     while True:
         now = datetime.fromisoformat(args.at) if args.at else datetime.now()
         try:
-            img = render(load(args.data, now))
+            wx = weather()  # cached fetch, at most hourly; None -> no dock
+            img = render(load(args.data, now), wx)
         except Exception as e:  # bad TOML, missing file: show it on the panel
             img = render_error(f"{type(e).__name__}: {e}")
         if img.tobytes() != last:

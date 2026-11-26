@@ -14,6 +14,16 @@ class Block:
 
 
 @dataclass
+class Weather:
+    """Today's outlook for the dock. Produced by eink.weather, not goals.toml."""
+    icon: str  # sun | part | cloud | rain | drizzle — keys of render.ICONS
+    hi: int    # today's max, °C
+    lo: int    # tonight's min, °C
+    rain: int  # max remaining chance of precipitation today, %
+    note: str = ""  # short phrase, may be empty
+
+
+@dataclass
 class State:
     now: datetime
     goals: list[tuple[str, bool]]
